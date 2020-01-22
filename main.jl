@@ -37,6 +37,7 @@ function main()
     indexes = Dict{String,Int64}()
     pairs = []
     mu = Dict{String,Float64}()
+    stock_levels = Dict{String, Array{Int64}}()
 
     index = 1
     nodes = Set{String}()
@@ -47,11 +48,20 @@ function main()
 
         customer = row[1]
         previous_element = ""
+        previous_elements = []
 
         for (col_index, data) in enumerate(row)
           print("$data, ")
-          if col_index == 2
-              push!(mu, customer => parse(Float64, data))    
+          if length(row) == 2 && col_index == 2
+              push!(mu, previous_element => parse(Float64, data))
+          elseif length(row) == 3 && (length(previous_elements) >= 1 && occursin("LW", previous_elements[1]))
+              first_element = previous_elements[1]
+              println("$first_element")
+              previous_element = data
+              push!(previous_elements, data)
+              if length(previous_elements) > 2
+                  push!(stock_levels, previous_elements[1] => Int64[parse(Int64,previous_elements[2]), parse(Int64, previous_elements[3])])
+              end
           elseif checkIfStringIsNumber(data)
               println("Add entry: [$customer, $previous_element, $data]")
               push!(pairs, [customer, previous_element, parse(Int64, data)])
@@ -64,6 +74,7 @@ function main()
               end
 
               previous_element = data
+              push!(previous_elements, data)
           end
         end
         println("")
@@ -73,6 +84,7 @@ function main()
     println("$pairs")
     println("$nodes")
     println("$mu")
+    println("$stock_levels")
 
     number_of_nodes = length(nodes)
     connections = zeros(Float64, number_of_nodes, number_of_nodes)
