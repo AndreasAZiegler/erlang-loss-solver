@@ -107,10 +107,8 @@ function parseInput(file_name::String, logging::Bool)
 
       customer = pair[1]
       storage = pair[2]
-      println("customer: $customer, storage: $storage")
       customer_index = customer_indexes[customer]
       storage_index = stock_indexes[storage]
-      println("customer index: $customer_index, storage_index: $storage_index")
       value = pair[3]
 
       connections[customer_index, storage_index] = value

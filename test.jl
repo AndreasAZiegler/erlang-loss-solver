@@ -10,13 +10,15 @@ using .ErlangLossSolver
 
   connections, indexes, pairs, nodes, mu, stock_levels = ErlangLossSolver.parseInput(filename, false)
 
-  connection_gt = [0.0 0.0 0.0 0.0 1.0 0.0 2.0; 0.0 0.0 0.0 0.0 1.0 2.0 2.0; 0.0 0.0 0.0 0.0 2.0 1.0 2.0; 0.0 0.0 0.0 0.0 0.0 1.0 2.0; 0.0 0.0 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0 0.0 0.0]
+  connection_gt = [1.0 0.0 2.0; 1.0 2.0 2.0; 2.0 1.0 2.0; 0.0 1.0 2.0]
 
   @test connections == connection_gt
 
-  indexes_gt = Dict("C1" => 1,"C2" => 2,"C3" => 3,"LW1" => 5,"C4" => 4,"LW2" => 6,"CW" => 7)
+  customer_indexes_gt = Dict("C1" => 1,"C2" => 2,"C3" => 3,"C4" => 4)
+  storage_indexes_gt = Dict("LW1" => 1,"LW2" => 2,"CW" => 3)
 
-  @test indexes == indexes_gt
+  @test indexes[1] == customer_indexes_gt
+  @test indexes[2] == storage_indexes_gt
 
   pairs_gt = Any[Any["C1", "LW1", 1], Any["C1", "CW", 2], Any["C2", "LW1", 1], Any["C2", "LW2", 2], Any["C2", "CW", 2], Any["C3", "LW2", 1], Any["C3", "LW1", 2], Any["C3", "CW", 2], Any["C4", "LW2", 1], Any["C4", "CW", 2]]
 
