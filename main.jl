@@ -26,10 +26,6 @@ end
 
 function main()
     parsed_args = ErlangLossSolver.parseCommandline()
-    println("Parsed args:")
-    for (arg,val) in parsed_args
-        println("  $arg  =>  $val")
-    end
 
     input_file_name = parsed_args["input"]
     println("$input_file_name")
@@ -46,10 +42,15 @@ function main()
     storages_mu = Dict{String, Float64}()
     # Initialize problem
     for (col_index, connection_col) in enumerate(eachcol(connections))
-      println("col index: $col_index, connection_col: $connection_col")
+      if logging
+        println("col index: $col_index, connection_col: $connection_col")
+      end
+
       storage_mu = 0
       for (row_index, cell) in enumerate(connection_col)
-        println("row index: $row_index, cell: $cell")
+        if logging
+          println("row index: $row_index, cell: $cell")
+        end
 
         if (cell == 1)
           storage_mu = storage_mu + customer_mu[row_index] * T
@@ -58,8 +59,31 @@ function main()
       push!(storages_mu, collect(keys(stock_indexes))[col_index] => storage_mu)
     end
 
+    println("### Problem initialized ###")
     println("storages mu: $storages_mu")
 
+    push!(stock_levels, "CW" => [1 1])
+
+    probabilities = Dict{String,Float64}()
+    for (storage_index, storage) in enumerate(stock_indexes)
+      storage_name = storage[1]
+      println("storage name: ", storage_name)
+      E = storages_mu[storage_name]
+      m = stock_levels[storage_name][2]
+      println("E: ", E, " m: ", m)
+
+      nominator = ((E ^ m) / factorial(m))
+      denominator = 0
+      for i in collect(0:m)
+        denominator = denominator + (E ^ i / factorial(i))
+      end
+
+      probability = nominator / denominator
+
+      push!(probabilities, storage_name => probability)
+    end
+
+    println("probabilities: ", probabilities)
 end
 
 main()
