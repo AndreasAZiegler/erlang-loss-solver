@@ -5,6 +5,8 @@ using CSV
 using DelimitedFiles
 using Parsers
 
+using Debugger
+
 export parseCommandline, parseInput
 
 function checkIfStringIsNumber(string)
@@ -33,12 +35,14 @@ function parseInput(file_name::String, logging::Bool)
     input_file = readdlm(file_name, '\n')
     #println("$input_file")
 
-    indexes = Dict{String,Int64}()
+    customer_indexes = Dict{String,Int64}()
+    stock_indexes = Dict{String,Int64}()
     pairs = []
     mu = Dict{String,Float64}()
     stock_levels = Dict{String, Array{Int64}}()
 
-    index = 1
+    customer_index = 1
+    stock_index = 1
     nodes = Set{String}()
     for (row_index, line) in enumerate(input_file)
         #println("$row_index, $line", typeof(line))
@@ -74,12 +78,15 @@ function parseInput(file_name::String, logging::Bool)
               push!(pairs, [customer, previous_element, parse(Int64, data)])
           else
               if !in(data, nodes)
-                if logging
-                  println("Added $data to $index")
+                if (occursin("LW", data) || "CW" == data)
+                  push!(stock_indexes, data => stock_index)
+                  stock_index += 1
+                elseif occursin("C", data)
+                  push!(customer_indexes, data => customer_index)
+                  customer_index += 1
                 end
-                push!(indexes, data => index)
+
                 push!(nodes, data)
-                index += 1
               end
 
               previous_element = data
@@ -89,24 +96,27 @@ function parseInput(file_name::String, logging::Bool)
     end
 
 
-    number_of_nodes = length(nodes)
-    connections = zeros(Float64, number_of_nodes, number_of_nodes)
+    number_of_customers = length(customer_indexes)
+    number_of_storages = length(stock_indexes)
+    connections = zeros(Float64, number_of_customers, number_of_storages)
 
     for pair in pairs
       if logging
-        print("pair: $pair: ")
+        println("pair: $pair: ")
       end
 
-      pair_1 = pair[1]
-      pair_2 = pair[2]
-      index_1 = indexes[pair_1]
-      index_2 = indexes[pair_2]
+      customer = pair[1]
+      storage = pair[2]
+      println("customer: $customer, storage: $storage")
+      customer_index = customer_indexes[customer]
+      storage_index = stock_indexes[storage]
+      println("customer index: $customer_index, storage_index: $storage_index")
       value = pair[3]
 
-      connections[index_1, index_2] = value
+      connections[customer_index, storage_index] = value
     end
 
-    return connections, indexes, pairs, nodes, mu, stock_levels
+    return connections, [customer_indexes, stock_indexes], pairs, nodes, mu, stock_levels
 end
 
 end

@@ -14,9 +14,12 @@ function main()
     logging = parsed_args["log"]
 
     connections, indexes, pairs, nodes, mu, stock_levels = ErlangLossSolver.parseInput(input_file_name, logging)
+    customer_indexes = indexes[1]
+    stock_indexes = indexes[2]
 
     if logging
-      println("indexes: $indexes")
+      println("customer indexes: $customer_indexes")
+      println("stock indexes: $stock_indexes")
       println("pairs: $pairs")
       println("nodes: $nodes")
       println("mu: $mu")
@@ -24,12 +27,15 @@ function main()
       println("connections: $connections")
     end
 
-    for (key, value) in sort(collect(indexes), by=x->x[2])
+    print("    ")
+    for (key, value) in sort(collect(stock_indexes), by=x->x[2])
       print("$key,  ")
     end
     println("")
-    for connetions_row in eachrow(connections)
-        println("$connetions_row")
+    for (row_index, connetions_row) in enumerate(eachrow(connections))
+      customer = collect(keys(customer_indexes))[row_index]
+      #println("customer: $customer")
+      println("$customer $connetions_row")
     end
 end
 
