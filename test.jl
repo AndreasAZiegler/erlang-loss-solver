@@ -8,7 +8,11 @@ using .ErlangLossSolver
   filename = "test_parser.csv"
   @test typeof(filename) == String
 
-  connections, indexes, pairs, nodes, mu, stock_levels = ErlangLossSolver.parseInput(filename, false)
+  T, connections, indexes, pairs, nodes, mu, stock_levels = ErlangLossSolver.parseInput(filename, false)
+  
+  T_gt = 2
+
+  @test T == T_gt
 
   connection_gt = [1.0 0.0 2.0; 1.0 2.0 2.0; 2.0 1.0 2.0; 0.0 1.0 2.0]
 

@@ -13,11 +13,12 @@ function main()
 
     logging = parsed_args["log"]
 
-    connections, indexes, pairs, nodes, mu, stock_levels = ErlangLossSolver.parseInput(input_file_name, logging)
+    T, connections, indexes, pairs, nodes, mu, stock_levels = ErlangLossSolver.parseInput(input_file_name, logging)
     customer_indexes = indexes[1]
     stock_indexes = indexes[2]
 
     if logging
+      println("T: $T")
       println("customer indexes: $customer_indexes")
       println("stock indexes: $stock_indexes")
       println("pairs: $pairs")
@@ -37,7 +38,6 @@ function main()
       println("$customer $connetions_row")
     end
 
-    T = 2
     customer_mu = collect(values(mu))
     storages_mu = Dict{String, Float64}()
     # Initialize problem
