@@ -1,6 +1,29 @@
 include("./ErlangLossSolver.jl")
 using .ErlangLossSolver
 
+function printParsedInput(T::Float64, connections::Array{Float64,2}, customer_indexes::Dict{String,Int64}, stock_indexes::Dict{String,Int64}, pairs::Array{Any,1}, nodes::Set{String}, mu::Dict{String,Float64}, stock_levels::Dict{String, Array{Int64}}, logging::Bool)
+  if logging
+    println("T: $T")
+    println("customer indexes: $customer_indexes")
+    println("stock indexes: $stock_indexes")
+    println("pairs: $pairs")
+    println("nodes: $nodes")
+    println("mu: $mu")
+    println("stock levels: $stock_levels")
+    println("connections: $connections")
+  end
+
+  print("    ")
+  for (key, value) in sort(collect(stock_indexes), by=x->x[2])
+    print("$key,  ")
+  end
+  println("")
+  for (row_index, connetions_row) in enumerate(eachrow(connections))
+    customer = collect(keys(customer_indexes))[row_index]
+    println("$customer $connetions_row")
+  end
+end
+
 function main()
     parsed_args = ErlangLossSolver.parseCommandline()
     println("Parsed args:")
@@ -17,26 +40,7 @@ function main()
     customer_indexes = indexes[1]
     stock_indexes = indexes[2]
 
-    if logging
-      println("T: $T")
-      println("customer indexes: $customer_indexes")
-      println("stock indexes: $stock_indexes")
-      println("pairs: $pairs")
-      println("nodes: $nodes")
-      println("mu: $mu")
-      println("stock levels: $stock_levels")
-      println("connections: $connections")
-    end
-
-    print("    ")
-    for (key, value) in sort(collect(stock_indexes), by=x->x[2])
-      print("$key,  ")
-    end
-    println("")
-    for (row_index, connetions_row) in enumerate(eachrow(connections))
-      customer = collect(keys(customer_indexes))[row_index]
-      println("$customer $connetions_row")
-    end
+    printParsedInput(T, connections, customer_indexes, stock_indexes, pairs, nodes, mu, stock_levels, logging)
 
     customer_mu = collect(values(mu))
     storages_mu = Dict{String, Float64}()
