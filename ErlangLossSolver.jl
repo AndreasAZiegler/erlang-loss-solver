@@ -344,7 +344,7 @@ function runUntilConvergence!(
     @info "Converged after $iteration iterations"
 end
 
-function calculateResults(
+function calculateFillrates(
     probabilities::Dict{String,Float64},
     customer_mu::Dict{String,Float64},
     storages_E::Dict{String,Float64},
@@ -376,13 +376,16 @@ function calculateResults(
         max_num_iterations,
     )
 
+    fill_rates = Dict{String,Float64}()
+
     @info "customers_alphas: $customers_alphas"
     @info "customers_mu: $customer_mu"
     for customer in collect(keys(customer_indexes))
         @info "Customer $customer:"
 
-        alpha = customers_alphas[customer] / customer_mu[customer]
-        @info "  alpha: $alpha = $(alpha * 100)%"
+        fill_rate = customers_alphas[customer] / customer_mu[customer]
+        @info "  fill_rate: $fill_rate = $(fill_rate * 100)%"
+        push!(fill_rates, customer => fill_rate)
     end
 
     @info "customer_mu: $customer_mu, summed: $(sum(values(customer_mu)))"
@@ -390,6 +393,8 @@ function calculateResults(
     overall_time_based_fillrate =
         (sum(values(customer_mu)) - sum(values(customers_theta))) / 0.9
     @info "overall time-based fillrate: $overall_time_based_fillrate"
+
+    return fill_rates, overall_time_based_fillrate
 end
 
 end

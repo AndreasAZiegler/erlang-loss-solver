@@ -83,7 +83,7 @@ function main()
         T,
     )
 
-    ErlangLossSolver.calculateResults(
+    ErlangLossSolver.calculateFillrates(
         probabilities,
         customer_mu,
         storages_E,
