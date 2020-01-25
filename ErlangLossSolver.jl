@@ -131,26 +131,77 @@ function findClosestStorage(
     return storage_name
 end
 
-function runOneIteration!(
+function calculateCustomerAlpha(
+    customers_alphas::Dict{String,Float64},
+    customers_theta::Dict{String,Float64},
+    probabilities::Dict{String,Float64},
+    customer_mu::Array{Float64},
+    connections::Array{Float64,2},
+    storage_indexes::Dict{String,Int64},
+    customer_indexes::Dict{String,Int64},
+    distance::Float64,
+)
+
+    for (row_index, connection_row) in enumerate(eachrow(connections))
+        @debug "col index: $row_index, connection_col: $connection_row"
+        closest_storage_name = findClosestStorage(connections, storage_indexes, row_index)
+        closest_storage_probability = probabilities[closest_storage_name]
+
+        customer_alpha = 0
+        for (col_index, cell) in enumerate(connection_row)
+            @debug "row index: $col_index, cell: $cell"
+            storage_name = collect(keys(storage_indexes))[col_index]
+
+            if storage_name == "CW"
+                theta = closest_storage_probability * customer_mu[row_index]
+                @info "theta customer: $row_index storage: $storage_name $theta"
+                push!(customers_theta, collect(keys(customer_indexes))[row_index] => theta)
+
+                continue
+            end
+
+            if (0 < cell <= distance)
+                storage_probability = probabilities[storage_name]
+                remote_storage_probability = 1.0
+                if (cell > 1)
+                    remote_storage_probability = closest_storage_probability
+                end
+                alpha =
+                    (1 - storage_probability) *
+                    remote_storage_probability *
+                    customer_mu[row_index]
+                @info "alpha customer: $row_index storage: $storage_name $alpha"
+                customer_alpha = customer_alpha + alpha
+
+            end
+        end
+        @info ""
+        push!(
+            customers_alphas,
+            collect(keys(customer_indexes))[row_index] => customer_alpha,
+        )
+    end
+end
+
+function calculateStorageE(
     probabilities::Dict{String,Float64},
     customer_mu::Array{Float64},
     storages_E::Dict{String,Float64},
     connections::Array{Float64,2},
     stock_indexes::Dict{String,Int64},
-    stock_levels::Dict{String,Int64},
     distance::Float64,
     T::Float64,
 )
+
     for (col_index, connection_col) in enumerate(eachcol(connections))
         @debug "col index: $col_index, connection_col: $connection_col"
 
         storage_E = 0
-        @info "mu: "
         for (row_index, cell) in enumerate(connection_col)
             @debug "row index: $row_index, cell: $cell"
 
             if (0 < cell <= distance)
-                @info "$(customer_mu[row_index]) "
+                @info "mu: customer: $row_index $(customer_mu[row_index]) "
                 storage_prabability = 1
                 if (cell > 1)
                     storage_name = findClosestStorage(connections, stock_indexes, row_index)
@@ -162,6 +213,28 @@ function runOneIteration!(
         @info ""
         push!(storages_E, collect(keys(stock_indexes))[col_index] => storage_E)
     end
+end
+
+function runOneIteration!(
+    probabilities::Dict{String,Float64},
+    customer_mu::Array{Float64},
+    storages_E::Dict{String,Float64},
+    connections::Array{Float64,2},
+    stock_indexes::Dict{String,Int64},
+    stock_levels::Dict{String,Int64},
+    distance::Float64,
+    T::Float64,
+)
+
+    calculateStorageE(
+        probabilities,
+        customer_mu,
+        storages_E,
+        connections,
+        stock_indexes,
+        distance,
+        T,
+    )
 
     @info "storages E: $storages_E"
 
@@ -268,9 +341,7 @@ function runUntilConvergence!(
         end
         iteration = iteration + 1
     end
-
     @info "Converged after $iteration iterations"
-
 end
 
 end

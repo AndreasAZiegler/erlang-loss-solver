@@ -5,7 +5,7 @@ function printParsedInput(
     T::Float64,
     connections::Array{Float64,2},
     customer_indexes::Dict{String,Int64},
-    stock_indexes::Dict{String,Int64},
+    storage_indexes::Dict{String,Int64},
     pairs::Array{Any,1},
     nodes::Set{String},
     mu::Dict{String,Float64},
@@ -13,18 +13,18 @@ function printParsedInput(
 )
     @debug "T: $T"
     @debug "customer indexes: $customer_indexes"
-    @debug "stock indexes: $stock_indexes"
+    @debug "stock indexes: $storage_indexes"
     @debug "pairs: $pairs"
     @debug "nodes: $nodes"
     @debug "mu: $mu"
     @debug "stock levels: $stock_levels"
     @debug "connections: $connections"
 
-    print("    ")
-    for (key, value) in sort(collect(stock_indexes), by = x -> x[2])
-        @info "$key,  "
+    keys_string = "    "
+    for (key, value) in sort(collect(storage_indexes), by = x -> x[2])
+        keys_string = string(keys_string, key, "  ")
     end
-    @info ""
+    @info "$keys_string "
     for (row_index, connetions_row) in enumerate(eachrow(connections))
         customer = collect(keys(customer_indexes))[row_index]
         @info "$customer $connetions_row"
@@ -40,13 +40,13 @@ function main()
     T, connections, indexes, pairs, nodes, mu, stock_levels =
         ErlangLossSolver.parseInput(input_file_name)
     customer_indexes = indexes[1]
-    stock_indexes = indexes[2]
+    storage_indexes = indexes[2]
 
     printParsedInput(
         T,
         connections,
         customer_indexes,
-        stock_indexes,
+        storage_indexes,
         pairs,
         nodes,
         mu,
@@ -65,25 +65,46 @@ function main()
         customer_mu,
         storages_E,
         connections,
-        stock_indexes,
+        storage_indexes,
         stock_levels,
         max_num_iterations,
         T,
     )
 
+    # Run until convergence
     ErlangLossSolver.runUntilConvergence!(
         probabilities,
         customer_mu,
         storages_E,
         connections,
-        stock_indexes,
+        storage_indexes,
         stock_levels,
         max_num_iterations,
         T,
     )
+
+    # Calculate fillrates
+    for (customer_index, customer_name) in customer_indexes
+        @info "Customer: $customer_name"
+        #closest_storage_name =
+        #    ErlangLossSolver.findClosestStorage(connections, storage_indexes, customer_index)
+    end
+
+    customers_alphas = Dict{String,Float64}()
+    customers_theta = Dict{String,Float64}()
+
+    ErlangLossSolver.calculateCustomerAlpha(
+        customers_alphas,
+        customers_theta,
+        probabilities,
+        customer_mu,
+        connections,
+        storage_indexes,
+        customer_indexes,
+        max_num_iterations,
+    )
 end
 
 main()
-
 
 
