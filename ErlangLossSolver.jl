@@ -1,7 +1,6 @@
 module ErlangLossSolver
 
 using ArgParse
-using CSV
 using DelimitedFiles
 using Parsers
 
@@ -130,4 +129,3 @@ function parseInput(file_name::String, logging::Bool)
 end
 
 end
-
