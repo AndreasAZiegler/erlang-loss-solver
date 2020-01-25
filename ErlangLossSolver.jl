@@ -36,13 +36,13 @@ function parseInput(file_name::String)
 
     T = 0
     customer_indexes = Dict{String,Int64}()
-    stock_indexes = Dict{String,Int64}()
+    storage_indexes = Dict{String,Int64}()
     pairs = []
     mu = Dict{String,Float64}()
-    stock_levels = Dict{String,Int64}()
+    storage_levels = Dict{String,Int64}()
 
     customer_index = 1
-    stock_index = 1
+    storage_index = 1
     nodes = Set{String}()
     for (row_index, line) in enumerate(input_file)
         row = split(line, ",")
@@ -66,7 +66,7 @@ function parseInput(file_name::String)
                 push!(previous_elements, data)
                 if length(previous_elements) > 1
                     push!(
-                        stock_levels,
+                        storage_levels,
                         previous_elements[1] => parse(Int64, previous_elements[2]),
                     )
                 end
@@ -76,8 +76,8 @@ function parseInput(file_name::String)
             else
                 if !in(data, nodes)
                     if (occursin("LW", data) || "CW" == data)
-                        push!(stock_indexes, data => stock_index)
-                        stock_index += 1
+                        push!(storage_indexes, data => storage_index)
+                        storage_index += 1
                     elseif occursin("C", data)
                         push!(customer_indexes, data => customer_index)
                         customer_index += 1
@@ -96,7 +96,7 @@ function parseInput(file_name::String)
 
 
     number_of_customers = length(customer_indexes)
-    number_of_storages = length(stock_indexes)
+    number_of_storages = length(storage_indexes)
     connections = zeros(Float64, number_of_customers, number_of_storages)
 
     for pair in pairs
@@ -105,13 +105,13 @@ function parseInput(file_name::String)
         customer = pair[1]
         storage = pair[2]
         customer_index = customer_indexes[customer]
-        storage_index = stock_indexes[storage]
+        storage_index = storage_indexes[storage]
         value = pair[3]
 
         connections[customer_index, storage_index] = value
     end
 
-    return T, connections, [customer_indexes, stock_indexes], pairs, nodes, mu, stock_levels
+    return T, connections, [customer_indexes, storage_indexes], pairs, nodes, mu, storage_levels
 end
 
 function findClosestStorage(
@@ -342,6 +342,54 @@ function runUntilConvergence!(
         iteration = iteration + 1
     end
     @info "Converged after $iteration iterations"
+end
+
+function calculateResults(
+    probabilities::Dict{String,Float64},
+    customer_mu::Dict{String,Float64},
+    storages_E::Dict{String,Float64},
+    connections::Array{Float64,2},
+    customer_indexes::Dict{String,Int64},
+    storage_indexes::Dict{String,Int64},
+    storage_levels::Dict{String,Int64},
+    max_num_iterations::Float64,
+    T::Float64,
+)
+    # Calculate fillrates
+    for (customer_index, customer_name) in customer_indexes
+        @info "Customer: $customer_name"
+        #closest_storage_name =
+        #    ErlangLossSolver.findClosestStorage(connections, storage_indexes, customer_index)
+    end
+
+    customers_alphas = Dict{String,Float64}()
+    customers_theta = Dict{String,Float64}()
+
+    ErlangLossSolver.calculateCustomerAlpha(
+        customers_alphas,
+        customers_theta,
+        probabilities,
+        collect(values(customer_mu)),
+        connections,
+        storage_indexes,
+        customer_indexes,
+        max_num_iterations,
+    )
+
+    @info "customers_alphas: $customers_alphas"
+    @info "customers_mu: $customer_mu"
+    for customer in collect(keys(customer_indexes))
+        @info "Customer $customer:"
+
+        alpha = customers_alphas[customer] / customer_mu[customer]
+        @info "  alpha: $alpha = $(alpha * 100)%"
+    end
+
+    @info "customer_mu: $customer_mu, summed: $(sum(values(customer_mu)))"
+    @info "customers_theta: $customers_theta, summed: $(sum(values(customers_theta)))"
+    overall_time_based_fillrate =
+        (sum(values(customer_mu)) - sum(values(customers_theta))) / 0.9
+    @info "overall time-based fillrate: $overall_time_based_fillrate"
 end
 
 end

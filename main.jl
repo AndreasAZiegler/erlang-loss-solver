@@ -9,15 +9,15 @@ function printParsedInput(
     pairs::Array{Any,1},
     nodes::Set{String},
     mu::Dict{String,Float64},
-    stock_levels::Dict{String,Int64},
+    storage_levels::Dict{String,Int64},
 )
     @debug "T: $T"
     @debug "customer indexes: $customer_indexes"
-    @debug "stock indexes: $storage_indexes"
+    @debug "storage indexes: $storage_indexes"
     @debug "pairs: $pairs"
     @debug "nodes: $nodes"
     @debug "mu: $mu"
-    @debug "stock levels: $stock_levels"
+    @debug "storage levels: $storage_levels"
     @debug "connections: $connections"
 
     keys_string = "    "
@@ -37,7 +37,7 @@ function main()
     input_file_name = parsed_args["input"]
     @info "$input_file_name"
 
-    T, connections, indexes, pairs, nodes, mu, stock_levels =
+    T, connections, indexes, pairs, nodes, customer_mu, storage_levels =
         ErlangLossSolver.parseInput(input_file_name)
     customer_indexes = indexes[1]
     storage_indexes = indexes[2]
@@ -49,11 +49,11 @@ function main()
         storage_indexes,
         pairs,
         nodes,
-        mu,
-        stock_levels,
+        customer_mu,
+        storage_levels,
     )
 
-    customer_mu = collect(values(mu))
+    customer_mu_array = collect(values(customer_mu))
     storages_E = Dict{String,Float64}()
     probabilities = Dict{String,Float64}()
 
@@ -62,11 +62,11 @@ function main()
     # Initialize problem
     ErlangLossSolver.initialize!(
         probabilities,
-        customer_mu,
+        customer_mu_array,
         storages_E,
         connections,
         storage_indexes,
-        stock_levels,
+        storage_levels,
         max_num_iterations,
         T,
     )
@@ -74,49 +74,27 @@ function main()
     # Run until convergence
     ErlangLossSolver.runUntilConvergence!(
         probabilities,
-        customer_mu,
+        customer_mu_array,
         storages_E,
         connections,
         storage_indexes,
-        stock_levels,
+        storage_levels,
         max_num_iterations,
         T,
     )
 
-    # Calculate fillrates
-    for (customer_index, customer_name) in customer_indexes
-        @info "Customer: $customer_name"
-        #closest_storage_name =
-        #    ErlangLossSolver.findClosestStorage(connections, storage_indexes, customer_index)
-    end
-
-    customers_alphas = Dict{String,Float64}()
-    customers_theta = Dict{String,Float64}()
-
-    ErlangLossSolver.calculateCustomerAlpha(
-        customers_alphas,
-        customers_theta,
+    ErlangLossSolver.calculateResults(
         probabilities,
         customer_mu,
+        storages_E,
         connections,
-        storage_indexes,
         customer_indexes,
+        storage_indexes,
+        storage_levels,
         max_num_iterations,
+        T,
     )
-
-    for customer in collect(keys(customer_indexes)) 
-      @info "Customer $customer:"
-
-      alpha = customers_alphas[customer] / mu[customer]
-      @info "  alpha: $alpha = $(alpha * 100)%"
-    end
-
-    @info "mu: $mu, summed: $(sum(values(mu)))"
-    @info "customers_theta: $customers_theta, summed: $(sum(values(customers_theta)))"
-    overall_time_based_fillrate = (sum(values(mu)) - sum(values(customers_theta))) / 0.9
-    @info "overall time-based fillrate: $overall_time_based_fillrate"
 end
 
 main()
-
 
