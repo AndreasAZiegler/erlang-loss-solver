@@ -52,4 +52,3 @@ using .ErlangLossSolver
 
     @test stock_levels == stock_levels_gt
 end
-
