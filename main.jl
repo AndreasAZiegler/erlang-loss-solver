@@ -10,27 +10,24 @@ function printParsedInput(
     nodes::Set{String},
     mu::Dict{String,Float64},
     stock_levels::Dict{String,Int64},
-    logging::Bool,
 )
-    if logging
-        println("T: $T")
-        println("customer indexes: $customer_indexes")
-        println("stock indexes: $stock_indexes")
-        println("pairs: $pairs")
-        println("nodes: $nodes")
-        println("mu: $mu")
-        println("stock levels: $stock_levels")
-        println("connections: $connections")
-    end
+    @debug "T: $T"
+    @debug "customer indexes: $customer_indexes"
+    @debug "stock indexes: $stock_indexes"
+    @debug "pairs: $pairs"
+    @debug "nodes: $nodes"
+    @debug "mu: $mu"
+    @debug "stock levels: $stock_levels"
+    @debug "connections: $connections"
 
     print("    ")
     for (key, value) in sort(collect(stock_indexes), by = x -> x[2])
-        print("$key,  ")
+        @info "$key,  "
     end
-    println("")
+    @info ""
     for (row_index, connetions_row) in enumerate(eachrow(connections))
         customer = collect(keys(customer_indexes))[row_index]
-        println("$customer $connetions_row")
+        @info "$customer $connetions_row"
     end
 end
 
@@ -38,12 +35,10 @@ function main()
     parsed_args = ErlangLossSolver.parseCommandline()
 
     input_file_name = parsed_args["input"]
-    println("$input_file_name")
-
-    logging = parsed_args["log"]
+    @info "$input_file_name"
 
     T, connections, indexes, pairs, nodes, mu, stock_levels =
-        ErlangLossSolver.parseInput(input_file_name, logging)
+        ErlangLossSolver.parseInput(input_file_name)
     customer_indexes = indexes[1]
     stock_indexes = indexes[2]
 
@@ -56,7 +51,6 @@ function main()
         nodes,
         mu,
         stock_levels,
-        logging,
     )
 
     customer_mu = collect(values(mu))
@@ -75,7 +69,6 @@ function main()
         stock_levels,
         max_num_iterations,
         T,
-        logging,
     )
 
     ErlangLossSolver.runUntilConvergence!(
@@ -87,10 +80,10 @@ function main()
         stock_levels,
         max_num_iterations,
         T,
-        logging,
     )
 end
 
 main()
+
 
 

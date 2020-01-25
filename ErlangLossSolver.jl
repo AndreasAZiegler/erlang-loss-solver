@@ -31,9 +31,8 @@ function parseCommandline()::Dict{String,Any}
     return parse_args(s)
 end
 
-function parseInput(file_name::String, logging::Bool)
+function parseInput(file_name::String)
     input_file = readdlm(file_name, '\n')
-    #println("$input_file")
 
     T = 0
     customer_indexes = Dict{String,Int64}()
@@ -46,20 +45,15 @@ function parseInput(file_name::String, logging::Bool)
     stock_index = 1
     nodes = Set{String}()
     for (row_index, line) in enumerate(input_file)
-        #println("$row_index, $line", typeof(line))
         row = split(line, ",")
-        if logging
-            println("$row")
-        end
+        @debug "$row"
 
         customer = row[1]
         previous_element = ""
         previous_elements = []
 
         for (col_index, data) in enumerate(row)
-            if logging
-                print("$data, ")
-            end
+            @debug "$data, "
             if previous_element == "T"
                 T = parse(Float64, data)
             elseif length(row) == 2 && col_index == 2 && occursin("C", previous_elements[1])
@@ -67,21 +61,17 @@ function parseInput(file_name::String, logging::Bool)
             elseif length(row) == 2 && col_index == 2 &&
                    (length(previous_elements) >= 0 && occursin("LW", previous_elements[1]))
                 first_element = previous_elements[1]
-                if logging
-                    println("$first_element")
-                end
+                @debug "$first_element"
                 previous_element = data
                 push!(previous_elements, data)
                 if length(previous_elements) > 1
                     push!(
                         stock_levels,
-                        previous_elements[1] => parse(Int64, previous_elements[2])
+                        previous_elements[1] => parse(Int64, previous_elements[2]),
                     )
                 end
             elseif checkIfStringIsNumber(data)
-                if logging
-                    println("Add entry: [$customer, $previous_element, $data]")
-                end
+                @debug "Add entry: [$customer, $previous_element, $data]"
                 push!(pairs, [customer, previous_element, parse(Int64, data)])
             else
                 if !in(data, nodes)
@@ -110,9 +100,7 @@ function parseInput(file_name::String, logging::Bool)
     connections = zeros(Float64, number_of_customers, number_of_storages)
 
     for pair in pairs
-        if logging
-            println("pair: $pair: ")
-        end
+        @debug "pair: $pair: "
 
         customer = pair[1]
         storage = pair[2]
@@ -130,18 +118,15 @@ function findClosestStorage(
     connections::Array{Float64,2},
     stock_indexes::Dict{String,Int64},
     customer_index::Int,
-    logging::Bool,
 )::String
     row = connections[customer_index, :]
     row[row .== 0.0] .= typemax(Float64)
 
     storage_index = argmin(row)
     storage_name = collect(keys(stock_indexes))[storage_index]
-    if logging
-        println("row: ", row)
-        println("argmin: ", storage_index)
-        println("storage name: ", storage_name)
-    end
+    @debug "row: $row"
+    @debug "argmin: $storage_index"
+    @debug "storage name: $storage_name"
 
     return storage_name
 end
@@ -155,48 +140,40 @@ function runOneIteration!(
     stock_levels::Dict{String,Int64},
     distance::Float64,
     T::Float64,
-    logging::Bool,
 )
     for (col_index, connection_col) in enumerate(eachcol(connections))
-        if logging
-            println("col index: $col_index, connection_col: $connection_col")
-        end
+        @debug "col index: $col_index, connection_col: $connection_col"
 
         storage_E = 0
-        print("mu: ")
+        @info "mu: "
         for (row_index, cell) in enumerate(connection_col)
-            if logging
-                println("row index: $row_index, cell: $cell")
-            end
+            @debug "row index: $row_index, cell: $cell"
 
             if (0 < cell <= distance)
-                print(customer_mu[row_index], " ")
+                @info "$(customer_mu[row_index]) "
                 storage_prabability = 1
                 if (cell > 1)
-                    storage_name =
-                        findClosestStorage(connections, stock_indexes, row_index, logging)
+                    storage_name = findClosestStorage(connections, stock_indexes, row_index)
                     storage_prabability = probabilities[storage_name]
                 end
-                #println("storage probability: ", storage_prabability)
                 storage_E = storage_E + storage_prabability * customer_mu[row_index] * T
             end
         end
-        println("")
+        @info ""
         push!(storages_E, collect(keys(stock_indexes))[col_index] => storage_E)
     end
 
-    println("### Problem initialized ###")
-    println("storages E: $storages_E")
+    @info "storages E: $storages_E"
 
     push!(stock_levels, "CW" => 1)
 
     for (storage_index, storage) in enumerate(stock_indexes)
         storage_name = storage[1]
-        println("")
-        println("storage name: ", storage_name)
+        @info ""
+        @info "storage name: $storage_name"
         E = storages_E[storage_name]
         m = stock_levels[storage_name]
-        println("E: ", E, " m: ", m)
+        @info "E: $E  m: $m"
 
         nominator = ((E^m) / factorial(m))
         denominator = 0
@@ -205,14 +182,14 @@ function runOneIteration!(
         end
 
         probability = nominator / denominator
-        println("nominator: ", nominator, " denominator: ", denominator)
-        println("probability: ", probability)
+        @info "nominator: $nominator denominator: $denominator"
+        @info "probability: $probability"
 
         push!(probabilities, storage_name => probability)
     end
 
-    println("probabilities of not meting the need:")
-    println("probabilities: ", probabilities)
+    @info "probabilities of not meting the need:"
+    @info "probabilities: $probabilities"
 end
 
 function initialize!(
@@ -224,9 +201,8 @@ function initialize!(
     stock_levels::Dict{String,Int64},
     max_num_iterations::Float64,
     T::Float64,
-    logging::Bool,
 )
-    println("Maximal number of initialization iterations: ", max_num_iterations)
+    @info "Maximal number of initialization iterations: $max_num_iterations"
 
     for distance in collect(1:max_num_iterations)
         runOneIteration!(
@@ -238,9 +214,10 @@ function initialize!(
             stock_levels,
             distance,
             T,
-            logging,
         )
     end
+
+    @info "### Problem initialized ###"
 end
 
 function haveWeConverged(
@@ -268,7 +245,6 @@ function runUntilConvergence!(
     stock_levels::Dict{String,Int64},
     max_num_iterations::Float64,
     T::Float64,
-    logging::Bool,
 )
 
     distance = max_num_iterations
@@ -285,7 +261,6 @@ function runUntilConvergence!(
             stock_levels,
             distance,
             T,
-            logging,
         )
 
         if haveWeConverged(probabilities, old_probabilities)
@@ -294,11 +269,8 @@ function runUntilConvergence!(
         iteration = iteration + 1
     end
 
-    println("Converged after ", iteration, " iterations")
+    @info "Converged after $iteration iterations"
 
 end
 
-
-
 end
-
