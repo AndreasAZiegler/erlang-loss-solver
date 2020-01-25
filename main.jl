@@ -1,36 +1,100 @@
 include("./ErlangLossSolver.jl")
 using .ErlangLossSolver
 
-function main()
-    parsed_args = ErlangLossSolver.parseCommandline()
-    println("Parsed args:")
-    for (arg,val) in parsed_args
-        println("  $arg  =>  $val")
+function printParsedInput(
+    T::Float64,
+    connections::Array{Float64,2},
+    customer_indexes::Dict{String,Int64},
+    storage_indexes::Dict{String,Int64},
+    pairs::Array{Any,1},
+    nodes::Set{String},
+    mu::Dict{String,Float64},
+    storage_levels::Dict{String,Int64},
+)
+    @debug "T: $T"
+    @debug "customer indexes: $customer_indexes"
+    @debug "storage indexes: $storage_indexes"
+    @debug "pairs: $pairs"
+    @debug "nodes: $nodes"
+    @debug "mu: $mu"
+    @debug "storage levels: $storage_levels"
+    @debug "connections: $connections"
+
+    keys_string = "    "
+    for (key, value) in sort(collect(storage_indexes), by = x -> x[2])
+        keys_string = string(keys_string, key, "  ")
     end
-
-    input_file_name = parsed_args["input"]
-    println("$input_file_name")
-
-    logging = parsed_args["log"]
-
-    connections, indexes, pairs, nodes, mu, stock_levels = ErlangLossSolver.parseInput(input_file_name, logging)
-
-    if logging
-      println("indexes: $indexes")
-      println("pairs: $pairs")
-      println("nodes: $nodes")
-      println("mu: $mu")
-      println("stock levels: $stock_levels")
-      println("connections: $connections")
-    end
-
-    for (key, value) in sort(collect(indexes), by=x->x[2])
-      print("$key,  ")
-    end
-    println("")
-    for connetions_row in eachrow(connections)
-        println("$connetions_row")
+    @info "$keys_string "
+    for (row_index, connetions_row) in enumerate(eachrow(connections))
+        customer = collect(keys(customer_indexes))[row_index]
+        @info "$customer $connetions_row"
     end
 end
 
+function main()
+    parsed_args = ErlangLossSolver.parseCommandline()
+
+    input_file_name = parsed_args["input"]
+    @info "$input_file_name"
+
+    T, connections, indexes, pairs, nodes, customer_mu, storage_levels =
+        ErlangLossSolver.parseInput(input_file_name)
+    customer_indexes = indexes[1]
+    storage_indexes = indexes[2]
+
+    printParsedInput(
+        T,
+        connections,
+        customer_indexes,
+        storage_indexes,
+        pairs,
+        nodes,
+        customer_mu,
+        storage_levels,
+    )
+
+    customer_mu_array = collect(values(customer_mu))
+    storages_E = Dict{String,Float64}()
+    probabilities = Dict{String,Float64}()
+
+    max_num_iterations = maximum(connections)
+
+    # Initialize problem
+    ErlangLossSolver.initialize!(
+        probabilities,
+        customer_mu_array,
+        storages_E,
+        connections,
+        storage_indexes,
+        storage_levels,
+        max_num_iterations,
+        T,
+    )
+
+    # Run until convergence
+    ErlangLossSolver.runUntilConvergence!(
+        probabilities,
+        customer_mu_array,
+        storages_E,
+        connections,
+        storage_indexes,
+        storage_levels,
+        max_num_iterations,
+        T,
+    )
+
+    ErlangLossSolver.calculateFillrates(
+        probabilities,
+        customer_mu,
+        storages_E,
+        connections,
+        customer_indexes,
+        storage_indexes,
+        storage_levels,
+        max_num_iterations,
+        T,
+    )
+end
+
 main()
+
