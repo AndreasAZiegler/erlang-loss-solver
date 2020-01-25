@@ -103,6 +103,18 @@ function main()
         customer_indexes,
         max_num_iterations,
     )
+
+    for customer in collect(keys(customer_indexes)) 
+      @info "Customer $customer:"
+
+      alpha = customers_alphas[customer] / mu[customer]
+      @info "  alpha: $alpha = $(alpha * 100)%"
+    end
+
+    @info "mu: $mu, summed: $(sum(values(mu)))"
+    @info "customers_theta: $customers_theta, summed: $(sum(values(customers_theta)))"
+    overall_time_based_fillrate = (sum(values(mu)) - sum(values(customers_theta))) / 0.9
+    @info "overall time-based fillrate: $overall_time_based_fillrate"
 end
 
 main()
