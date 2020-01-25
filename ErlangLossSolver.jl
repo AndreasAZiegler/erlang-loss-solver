@@ -4,8 +4,6 @@ using ArgParse
 using DelimitedFiles
 using Parsers
 
-using Debugger
-
 export parseCommandline, parseInput
 
 function checkIfStringIsNumber(string)
