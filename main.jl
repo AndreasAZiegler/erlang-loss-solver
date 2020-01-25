@@ -9,7 +9,7 @@ function printParsedInput(
     pairs::Array{Any,1},
     nodes::Set{String},
     mu::Dict{String,Float64},
-    stock_levels::Dict{String,Array{Int64}},
+    stock_levels::Dict{String,Int64},
     logging::Bool,
 )
     if logging

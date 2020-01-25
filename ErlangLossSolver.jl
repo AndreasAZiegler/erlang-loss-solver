@@ -40,7 +40,7 @@ function parseInput(file_name::String, logging::Bool)
     stock_indexes = Dict{String,Int64}()
     pairs = []
     mu = Dict{String,Float64}()
-    stock_levels = Dict{String,Array{Int64}}()
+    stock_levels = Dict{String,Int64}()
 
     customer_index = 1
     stock_index = 1
@@ -62,23 +62,20 @@ function parseInput(file_name::String, logging::Bool)
             end
             if previous_element == "T"
                 T = parse(Float64, data)
-            elseif length(row) == 2 && col_index == 2
+            elseif length(row) == 2 && col_index == 2 && occursin("C", previous_elements[1])
                 push!(mu, previous_element => parse(Float64, data))
-            elseif length(row) == 3 &&
-                   (length(previous_elements) >= 1 && occursin("LW", previous_elements[1]))
+            elseif length(row) == 2 && col_index == 2 &&
+                   (length(previous_elements) >= 0 && occursin("LW", previous_elements[1]))
                 first_element = previous_elements[1]
                 if logging
                     println("$first_element")
                 end
                 previous_element = data
                 push!(previous_elements, data)
-                if length(previous_elements) > 2
+                if length(previous_elements) > 1
                     push!(
                         stock_levels,
-                        previous_elements[1] => Int64[
-                            parse(Int64, previous_elements[2]),
-                            parse(Int64, previous_elements[3]),
-                        ],
+                        previous_elements[1] => parse(Int64, previous_elements[2])
                     )
                 end
             elseif checkIfStringIsNumber(data)
@@ -155,7 +152,7 @@ function runOneIteration!(
     storages_E::Dict{String,Float64},
     connections::Array{Float64,2},
     stock_indexes::Dict{String,Int64},
-    stock_levels::Dict{String,Array{Int64}},
+    stock_levels::Dict{String,Int64},
     distance::Float64,
     T::Float64,
     logging::Bool,
@@ -191,14 +188,14 @@ function runOneIteration!(
     println("### Problem initialized ###")
     println("storages E: $storages_E")
 
-    push!(stock_levels, "CW" => [1 1])
+    push!(stock_levels, "CW" => 1)
 
     for (storage_index, storage) in enumerate(stock_indexes)
         storage_name = storage[1]
         println("")
         println("storage name: ", storage_name)
         E = storages_E[storage_name]
-        m = stock_levels[storage_name][2]
+        m = stock_levels[storage_name]
         println("E: ", E, " m: ", m)
 
         nominator = ((E^m) / factorial(m))
@@ -224,7 +221,7 @@ function initialize!(
     storages_E::Dict{String,Float64},
     connections::Array{Float64,2},
     stock_indexes::Dict{String,Int64},
-    stock_levels::Dict{String,Array{Int64}},
+    stock_levels::Dict{String,Int64},
     max_num_iterations::Float64,
     T::Float64,
     logging::Bool,
@@ -268,7 +265,7 @@ function runUntilConvergence!(
     storages_E::Dict{String,Float64},
     connections::Array{Float64,2},
     stock_indexes::Dict{String,Int64},
-    stock_levels::Dict{String,Array{Int64}},
+    stock_levels::Dict{String,Int64},
     max_num_iterations::Float64,
     T::Float64,
     logging::Bool,
@@ -304,3 +301,4 @@ end
 
 
 end
+

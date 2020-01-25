@@ -48,7 +48,7 @@ using .ErlangLossSolver
 
     @test mu == mu_gt
 
-    stock_levels_gt = Dict{String,Array{Int64,N} where N}("LW1" => [1, 1], "LW2" => [1, 3])
+    stock_levels_gt = Dict{String,Int64}("LW1" => 1, "LW2" => 3)
 
     @test stock_levels == stock_levels_gt
 end
