@@ -326,14 +326,14 @@ function initialize!(
 
     @info "### Problem initialized ###"
 
-    println("\nProblem initialized:")
+    println("\n================= Interation 1 =================")
 
     println("E values of storages:")
     for (key, value) in storages_E
         println("Storage ", key, ": E = ", value)
     end
 
-    println("\nProbabilities of storages:")
+    println("\nProbabilities of storages (Pb):")
     for (key, value) in probabilities
         println("Storage ", key, ": probability = ", value)
     end
@@ -366,13 +366,11 @@ function runUntilConvergence!(
     T::Float64,
 )
 
-    println("\nRun until probabilities converged:")
-
     distance = max_num_iterations
     converged = false
     iteration = 2
 
-    println("\nIteration number: ", iteration)
+    println("\n================= Interation $iteration =================")
     while !converged
         old_probabilities = probabilities
         ErlangLossSolver.runOneIteration!(
@@ -397,7 +395,7 @@ function runUntilConvergence!(
             println("Storage ", key, ": E = ", value)
         end
 
-        println("\nProbabilities of storages:")
+        println("\nProbabilities of storages (Pb):")
         for (key, value) in probabilities
             println("Storage ", key, ": probability = ", value)
         end
@@ -419,7 +417,7 @@ function calculateFillrates(
     T::Float64,
 )
 
-    println("\nPrint results:")
+    println("\n================= Print results =================")
 
     for (customer_index, customer_name) in customer_indexes
         @info "Customer: $customer_name"
@@ -439,24 +437,13 @@ function calculateFillrates(
         max_num_iterations,
     )
 
-    println("Cusomters α-values:")
-    for (key, value) in customers_alphas
-        println("Cusomter ", key, " α-value: ", value)
-    end
-
-
-    println("\nCusomters θ-values:")
-    for (key, value) in customers_theta
-        println("Cusomter ", key, " θ-value: ", value)
-    end
-
     fill_rates = Dict{String,Float64}()
 
     @info "customers_alphas: $customers_alphas"
     @info "customers_mu: $customer_mu"
 
     # Calculate fill rates
-    println("\nCalculate fill rates:")
+    println("Calculated fill rates:")
 
     for customer in collect(keys(customer_indexes))
         @info "Customer $customer:"
