@@ -135,6 +135,24 @@ function findClosestStorage(
     return storage_name
 end
 
+function calculateLocalStorageProbability(
+    probabilities::Dict{String,Float64},
+    storage_indexes::Dict{String,Int64},
+    connections::Array{Float64,2},
+    row_index::Int,
+)::Float64
+    local_storage_probability = 1
+    for (storage_name, probability) in probabilities
+        if storage_name != "CW"
+            if connections[row_index, storage_indexes[storage_name]] > 0
+                local_storage_probability *= probability
+            end
+        end
+    end
+
+    return local_storage_probability
+end
+
 function calculateCustomerAlpha(
     customers_alphas::Dict{String,Float64},
     customers_theta::Dict{String,Float64},
@@ -157,7 +175,13 @@ function calculateCustomerAlpha(
             storage_name = collect(keys(storage_indexes))[col_index]
 
             if storage_name == "CW"
-                θ = closest_storage_probability * customer_mu[row_index]
+                local_storage_probability = calculateLocalStorageProbability(
+                    probabilities,
+                    storage_indexes,
+                    connections,
+                    row_index,
+                )
+                θ = local_storage_probability * customer_mu[row_index]
                 println("Customer: $row_index storage: $storage_name  θ-value =  $θ")
                 @info "theta customer: $row_index storage: $storage_name $θ"
                 push!(customers_theta, collect(keys(customer_indexes))[row_index] => θ)
@@ -439,7 +463,15 @@ function calculateFillrates(
 
         fill_rate = customers_alphas[customer] / customer_mu[customer]
         @info "  fill_rate: $fill_rate = $(fill_rate * 100)%"
-        println("Customer ", customer, " fill rate: ", fill_rate)
+        println(
+            "Customer ",
+            customer,
+            " fill rate: ",
+            fill_rate,
+            " = ",
+            fill_rate * 100,
+            "%",
+        )
         push!(fill_rates, customer => fill_rate)
     end
 
@@ -447,10 +479,17 @@ function calculateFillrates(
     @info "customers_theta: $customers_theta, summed: $(sum(values(customers_theta)))"
     overall_time_based_fillrate =
         (sum(values(customer_mu)) - sum(values(customers_theta))) / sum(values(customer_mu))
-    println("\nOverall time based fillrate: ", overall_time_based_fillrate)
+    println(
+        "\nOverall time based fillrate: ",
+        overall_time_based_fillrate,
+        " = ",
+        overall_time_based_fillrate * 100,
+        "%",
+    )
     @info "overall time-based fillrate: $overall_time_based_fillrate"
 
     return fill_rates, overall_time_based_fillrate
 end
 
 end
+

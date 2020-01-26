@@ -28,6 +28,7 @@ function printParsedInput(
     end
     @info "$keys_string "
     println("Problem structure:")
+    println("T = ", T)
     println("$keys_string ")
     for (row_index, connetions_row) in enumerate(eachrow(connections))
         customer = collect(keys(customer_indexes))[row_index]
