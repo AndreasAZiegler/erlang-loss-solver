@@ -26,7 +26,7 @@ For the test example (input\_format.csv) the output is the following:
 ```bash
 Input file name: input_format.csv
 
-Problem structure:
+================= Problem structure =================
 T = 2.0
     LW1  LW2  CW   
 C1 [1.0, 0.0, 2.0]
@@ -34,33 +34,31 @@ C2 [1.0, 2.0, 2.0]
 C3 [2.0, 1.0, 2.0]
 C4 [0.0, 1.0, 2.0]
 
-Problem initialized:
+================= Interation 1 =================
 E values of storages:
 Storage LW1: E = 0.6718204488778056
 Storage LW2: E = 1.35
 Storage CW: E = 0.3327306733167083
 
-Probabilities of storages:
+Probabilities of storages (Pb):
 Storage LW1: probability = 0.4018496420047733
 Storage LW2: probability = 0.11169370626989666
 Storage CW: probability = 0.24966085044674186
 
-Run until probabilities converged:
-
-Iteration number: 2
+================= Interation 2 =================
 E values of storages:
 Storage LW1: E = 0.6893549650159174
 Storage LW2: E = 1.3607398568019096
 Storage CW: E = 0.37514223272673997
 
-Probabilities of storages:
+Probabilities of storages (Pb):
 Storage LW1: probability = 0.40805809275815647
 Storage LW2: probability = 0.11329562934890061
 Storage CW: probability = 0.2728024954792338
 
 Converged after 2 iterations
 
-Print results:
+================= Print results =================
 Customer: 1 storage: LW1 α-value =  0.05919419072418435
 Customer: 1 storage: CW  θ-value =  0.04080580927581565
 
@@ -75,19 +73,7 @@ Customer: 3 storage: CW  θ-value =  0.01849247937197896
 Customer: 4 storage: LW2 α-value =  0.1773408741302199
 Customer: 4 storage: CW  θ-value =  0.022659125869780125
 
-Cusomters α-values:
-Cusomter C1 α-value: 0.05919419072418435
-Cusomter C2 α-value: 0.19075376031401053
-Cusomter C3 α-value: 0.38150752062802107
-Cusomter C4 α-value: 0.1773408741302199
-
-Cusomters θ-values:
-Cusomter C1 θ-value: 0.04080580927581565
-Cusomter C2 θ-value: 0.00924623968598948
-Cusomter C3 θ-value: 0.01849247937197896
-Cusomter C4 θ-value: 0.022659125869780125
-
-Calculate fill rates:
+Calculated fill rates:
 Customer C1 fill rate: 0.5919419072418435 = 59.194190724184345%
 Customer C2 fill rate: 0.9537688015700526 = 95.37688015700526%
 Customer C3 fill rate: 0.9537688015700526 = 95.37688015700526%
