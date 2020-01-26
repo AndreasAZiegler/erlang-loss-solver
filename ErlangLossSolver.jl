@@ -109,7 +109,13 @@ function parseInput(file_name::String)
         connections[customer_index, storage_index] = value
     end
 
-    return T, connections, [customer_indexes, storage_indexes], pairs, nodes, mu, storage_levels
+    return T,
+    connections,
+    [customer_indexes, storage_indexes],
+    pairs,
+    nodes,
+    mu,
+    storage_levels
 end
 
 function findClosestStorage(
@@ -151,9 +157,10 @@ function calculateCustomerAlpha(
             storage_name = collect(keys(storage_indexes))[col_index]
 
             if storage_name == "CW"
-                theta = closest_storage_probability * customer_mu[row_index]
-                @info "theta customer: $row_index storage: $storage_name $theta"
-                push!(customers_theta, collect(keys(customer_indexes))[row_index] => theta)
+                θ = closest_storage_probability * customer_mu[row_index]
+                println("Customer: $row_index storage: $storage_name  θ-value =  $θ")
+                @info "theta customer: $row_index storage: $storage_name $θ"
+                push!(customers_theta, collect(keys(customer_indexes))[row_index] => θ)
 
                 continue
             end
@@ -164,15 +171,18 @@ function calculateCustomerAlpha(
                 if (cell > 1)
                     remote_storage_probability = closest_storage_probability
                 end
-                alpha =
+                α =
                     (1 - storage_probability) *
                     remote_storage_probability *
                     customer_mu[row_index]
-                @info "alpha customer: $row_index storage: $storage_name $alpha"
-                customer_alpha = customer_alpha + alpha
+
+                println("Customer: $row_index storage: $storage_name α-value =  $α")
+                @info "alpha customer: $row_index storage: $storage_name $α"
+                customer_alpha = customer_alpha + α
 
             end
         end
+        println("")
         @info ""
         push!(
             customers_alphas,
@@ -224,6 +234,7 @@ function runOneIteration!(
     T::Float64,
 )
 
+    # Calculate the E values of each storage
     calculateStorageE(
         probabilities,
         customer_mu,
@@ -236,6 +247,7 @@ function runOneIteration!(
 
     @info "storages E: $storages_E"
 
+    # Add central stock
     push!(stock_levels, "CW" => 1)
 
     for (storage_index, storage) in enumerate(stock_indexes)
@@ -289,6 +301,18 @@ function initialize!(
     end
 
     @info "### Problem initialized ###"
+
+    println("\nProblem initialized:")
+
+    println("E values of storages:")
+    for (key, value) in storages_E
+        println("Storage ", key, ": E = ", value)
+    end
+
+    println("\nProbabilities of storages:")
+    for (key, value) in probabilities
+        println("Storage ", key, ": probability = ", value)
+    end
 end
 
 function haveWeConverged(
@@ -318,9 +342,13 @@ function runUntilConvergence!(
     T::Float64,
 )
 
+    println("\nRun until probabilities converged:")
+
     distance = max_num_iterations
     converged = false
-    iteration = 1
+    iteration = 2
+
+    println("\nIteration number: ", iteration)
     while !converged
         old_probabilities = probabilities
         ErlangLossSolver.runOneIteration!(
@@ -336,9 +364,22 @@ function runUntilConvergence!(
 
         if haveWeConverged(probabilities, old_probabilities)
             converged = true
+        else
+            iteration = iteration + 1
         end
-        iteration = iteration + 1
+
+        println("E values of storages:")
+        for (key, value) in storages_E
+            println("Storage ", key, ": E = ", value)
+        end
+
+        println("\nProbabilities of storages:")
+        for (key, value) in probabilities
+            println("Storage ", key, ": probability = ", value)
+        end
     end
+
+    println("\nConverged after $iteration iterations")
     @info "Converged after $iteration iterations"
 end
 
@@ -353,11 +394,11 @@ function calculateFillrates(
     max_num_iterations::Float64,
     T::Float64,
 )
-    # Calculate fillrates
+
+    println("\nPrint results:")
+
     for (customer_index, customer_name) in customer_indexes
         @info "Customer: $customer_name"
-        #closest_storage_name =
-        #    ErlangLossSolver.findClosestStorage(connections, storage_indexes, customer_index)
     end
 
     customers_alphas = Dict{String,Float64}()
@@ -374,55 +415,42 @@ function calculateFillrates(
         max_num_iterations,
     )
 
+    println("Cusomters α-values:")
+    for (key, value) in customers_alphas
+        println("Cusomter ", key, " α-value: ", value)
+    end
+
+
+    println("\nCusomters θ-values:")
+    for (key, value) in customers_theta
+        println("Cusomter ", key, " θ-value: ", value)
+    end
+
     fill_rates = Dict{String,Float64}()
 
     @info "customers_alphas: $customers_alphas"
     @info "customers_mu: $customer_mu"
+
+    # Calculate fill rates
+    println("\nCalculate fill rates:")
+
     for customer in collect(keys(customer_indexes))
         @info "Customer $customer:"
 
         fill_rate = customers_alphas[customer] / customer_mu[customer]
         @info "  fill_rate: $fill_rate = $(fill_rate * 100)%"
+        println("Customer ", customer, " fill rate: ", fill_rate)
         push!(fill_rates, customer => fill_rate)
     end
 
     @info "customer_mu: $customer_mu, summed: $(sum(values(customer_mu)))"
     @info "customers_theta: $customers_theta, summed: $(sum(values(customers_theta)))"
     overall_time_based_fillrate =
-        (sum(values(customer_mu)) - sum(values(customers_theta))) / 0.9
+        (sum(values(customer_mu)) - sum(values(customers_theta))) / sum(values(customer_mu))
+    println("\nOverall time based fillrate: ", overall_time_based_fillrate)
     @info "overall time-based fillrate: $overall_time_based_fillrate"
 
     return fill_rates, overall_time_based_fillrate
-end
-
-function printParsedInput(
-    T::Float64,
-    connections::Array{Float64,2},
-    customer_indexes::Dict{String,Int64},
-    storage_indexes::Dict{String,Int64},
-    pairs::Array{Any,1},
-    nodes::Set{String},
-    mu::Dict{String,Float64},
-    storage_levels::Dict{String,Int64},
-)
-    @debug "T: $T"
-    @debug "customer indexes: $customer_indexes"
-    @debug "storage indexes: $storage_indexes"
-    @debug "pairs: $pairs"
-    @debug "nodes: $nodes"
-    @debug "mu: $mu"
-    @debug "storage levels: $storage_levels"
-    @debug "connections: $connections"
-
-    keys_string = "    "
-    for (key, value) in sort(collect(storage_indexes), by = x -> x[2])
-        keys_string = string(keys_string, key, "  ")
-    end
-    @info "$keys_string "
-    for (row_index, connetions_row) in enumerate(eachrow(connections))
-        customer = collect(keys(customer_indexes))[row_index]
-        @info "$customer $connetions_row"
-    end
 end
 
 end
