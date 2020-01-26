@@ -1,36 +1,6 @@
 include("./ErlangLossSolver.jl")
 using .ErlangLossSolver
 
-function printParsedInput(
-    T::Float64,
-    connections::Array{Float64,2},
-    customer_indexes::Dict{String,Int64},
-    storage_indexes::Dict{String,Int64},
-    pairs::Array{Any,1},
-    nodes::Set{String},
-    mu::Dict{String,Float64},
-    storage_levels::Dict{String,Int64},
-)
-    @debug "T: $T"
-    @debug "customer indexes: $customer_indexes"
-    @debug "storage indexes: $storage_indexes"
-    @debug "pairs: $pairs"
-    @debug "nodes: $nodes"
-    @debug "mu: $mu"
-    @debug "storage levels: $storage_levels"
-    @debug "connections: $connections"
-
-    keys_string = "    "
-    for (key, value) in sort(collect(storage_indexes), by = x -> x[2])
-        keys_string = string(keys_string, key, "  ")
-    end
-    @info "$keys_string "
-    for (row_index, connetions_row) in enumerate(eachrow(connections))
-        customer = collect(keys(customer_indexes))[row_index]
-        @info "$customer $connetions_row"
-    end
-end
-
 function main()
     parsed_args = ErlangLossSolver.parseCommandline()
 
@@ -42,7 +12,7 @@ function main()
     customer_indexes = indexes[1]
     storage_indexes = indexes[2]
 
-    printParsedInput(
+    ErlangLossSolver.printParsedInput(
         T,
         connections,
         customer_indexes,
