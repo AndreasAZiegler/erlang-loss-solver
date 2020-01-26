@@ -27,7 +27,7 @@ function printParsedInput(
         keys_string = string(keys_string, key, "  ")
     end
     @info "$keys_string "
-    println("\n================= Problem structure =================")
+    println("================= Problem structure =================")
 
     println("T = ", T)
     println("$keys_string ")
