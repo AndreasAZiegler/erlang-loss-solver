@@ -360,8 +360,8 @@ function runUntilConvergence!(
     customer_mu::Array{Float64},
     storages_E::Dict{String,Float64},
     connections::Array{Float64,2},
-    stock_indexes::Dict{String,Int64},
-    stock_levels::Dict{String,Int64},
+    storage_indexes::Dict{String,Int64},
+    storage_levels::Dict{String,Int64},
     max_num_iterations::Float64,
     T::Float64,
 )
@@ -378,8 +378,8 @@ function runUntilConvergence!(
             customer_mu,
             storages_E,
             connections,
-            stock_indexes,
-            stock_levels,
+            storage_indexes,
+            storage_levels,
             distance,
             T,
         )
