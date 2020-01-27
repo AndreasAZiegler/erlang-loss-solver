@@ -20,10 +20,6 @@ function parseCommandline()::Dict{String,Any}
         "--input"
         help = "Select input file"
         arg_type = String
-        "--log"
-        help = "Actevate loggin"
-        arg_type = Bool
-        default = false
     end
 
     return parse_args(s)
@@ -343,11 +339,15 @@ function haveWeConverged(
     new_probabilities::Dict{String,Float64},
     old_probabilities::Dict{String,Float64},
 )::Bool
-    new_values = [value for value in values(new_probabilities)]
-    old_values = [value for value in values(old_probabilities)]
+    new_values = [value for (key, value) in new_probabilities if occursin("LW", key)]
+    old_values = [value for (key, value) in old_probabilities if occursin("LW", key)]
+
+    println("new values: ", new_values)
+    println("old values: ", old_values)
 
     for (index, new_value) in enumerate(new_values)
-        if !isapprox(new_value, old_values[index])
+        if !isapprox(new_value, old_values[index], atol = 1e-3)
+            println("new value and old value are not the same")
             return false
         end
     end
@@ -372,7 +372,7 @@ function runUntilConvergence!(
 
     println("\n================= Interation $iteration =================")
     while !converged
-        old_probabilities = probabilities
+        old_probabilities = deepcopy(probabilities)
         ErlangLossSolver.runOneIteration!(
             probabilities,
             customer_mu,
