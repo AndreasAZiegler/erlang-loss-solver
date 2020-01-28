@@ -520,7 +520,7 @@ end
 
     storage_levels = Dict{String,Int64}("LW1" => 1, "LW2" => 3)
 
-    customer_mu = collect(values(customer_mu))
+    customer_mu_array = collect(values(customer_mu))
     storages_E = Dict{String,Float64}()
     probabilities = Dict{String,Float64}("LW1" => 0.40805809275815647, "LW2" => 0.11329562934890061)
 
@@ -540,15 +540,15 @@ end
         max_num_iterations,
     )
 
-    @test isapprox(customers_alphas["C1"], 0.08799088333423224)
-    @test isapprox(customers_alphas["C2"], 0.19767930677111786)
-    @test isapprox(customers_alphas["C3"], 0.3953586135422357)
-    @test isapprox(customers_alphas["C4"], 0.1806755709560443)
+    @test isapprox(customers_alphas["C1"], 0.05919419072418435)
+    @test isapprox(customers_alphas["C2"], 0.19075376031401053)
+    @test isapprox(customers_alphas["C3"], 0.38150752062802107)
+    @test isapprox(customers_alphas["C4"], 0.1773408741302199)
 
-    @test isapprox(customers_theta["C1"], 0.012009116665767766)
-    @test isapprox(customers_theta["C2"], 0.002320693228882151)
-    @test isapprox(customers_theta["C3"], 0.004641386457764302)
-    @test isapprox(customers_theta["C4"], 0.019324429043955708)
+    @test isapprox(customers_theta["C1"], 0.040805809275815647)
+    @test isapprox(customers_theta["C2"], 0.00924623968598948)
+    @test isapprox(customers_theta["C3"], 0.01849247937197896)
+    @test isapprox(customers_theta["C4"], 0.022659125869780125)
 
     fill_rates, overall_time_based_fillrate = ErlangLossSolver.calculateFillrates(
         probabilities,
@@ -562,12 +562,12 @@ end
         T,
     )
 
-    @test isapprox(fill_rates["C1"], 0.8799088333423224)
-    @test isapprox(fill_rates["C2"], 0.9883965338555892)
-    @test isapprox(fill_rates["C3"], 0.9883965338555892)
-    @test isapprox(fill_rates["C4"], 0.9033778547802215)
+    @test isapprox(fill_rates["C1"], 0.5919419072418435)
+    @test isapprox(fill_rates["C2"], 0.9537688015700526)
+    @test isapprox(fill_rates["C3"], 0.9537688015700526)
+    @test isapprox(fill_rates["C4"], 0.8867043706510994)
 
-    @test isapprox(overall_time_based_fillrate, 0.9574493051151446)
+    @test isapprox(overall_time_based_fillrate, 0.8986626064404842)
 end
 
 @testset "Example 2: initialize/first iteration" begin
