@@ -38,7 +38,7 @@ function printParsedInput(
     end
 end
 
-function main(input_file_name::String)
+function main(input_file_name::String, accuracy::Int)
     @info "$input_file_name"
     println("Input file name: $input_file_name\n")
 
@@ -86,6 +86,7 @@ function main(input_file_name::String)
         storage_levels,
         max_num_iterations,
         T,
+        accuracy
     )
 
     ErlangLossSolver.calculateFillrates(

@@ -20,10 +20,10 @@ function parseCommandline()::Dict{String,Any}
         "--input"
         help = "Select input file"
         arg_type = String
-        "--log"
-        help = "Actevate loggin"
-        arg_type = Bool
-        default = false
+        "--accuracy"
+        help = "Number of digits accuracy after the decimal point"
+        arg_type = Int64
+        default = 3
     end
 
     return parse_args(s)
@@ -342,12 +342,17 @@ end
 function haveWeConverged(
     new_probabilities::Dict{String,Float64},
     old_probabilities::Dict{String,Float64},
+    accuracy::Int,
 )::Bool
-    new_values = [value for value in values(new_probabilities)]
-    old_values = [value for value in values(old_probabilities)]
+    new_values = [value for (key, value) in new_probabilities if occursin("LW", key)]
+    old_values = [value for (key, value) in old_probabilities if occursin("LW", key)]
+
+    println("new values: ", new_values)
+    println("old values: ", old_values)
 
     for (index, new_value) in enumerate(new_values)
-        if !isapprox(new_value, old_values[index])
+        if !isapprox(new_value, old_values[index], atol = 10^(-Float64(accuracy)))
+            println("new value and old value are not the same")
             return false
         end
     end
@@ -360,10 +365,11 @@ function runUntilConvergence!(
     customer_mu::Array{Float64},
     storages_E::Dict{String,Float64},
     connections::Array{Float64,2},
-    stock_indexes::Dict{String,Int64},
-    stock_levels::Dict{String,Int64},
+    storage_indexes::Dict{String,Int64},
+    storage_levels::Dict{String,Int64},
     max_num_iterations::Float64,
     T::Float64,
+    accuracy::Int,
 )
 
     distance = max_num_iterations
@@ -372,19 +378,19 @@ function runUntilConvergence!(
 
     println("\n================= Interation $iteration =================")
     while !converged
-        old_probabilities = probabilities
+        old_probabilities = deepcopy(probabilities)
         ErlangLossSolver.runOneIteration!(
             probabilities,
             customer_mu,
             storages_E,
             connections,
-            stock_indexes,
-            stock_levels,
+            storage_indexes,
+            storage_levels,
             distance,
             T,
         )
 
-        if haveWeConverged(probabilities, old_probabilities)
+        if haveWeConverged(probabilities, old_probabilities, accuracy)
             converged = true
         else
             iteration = iteration + 1
@@ -479,4 +485,3 @@ function calculateFillrates(
 end
 
 end
-
