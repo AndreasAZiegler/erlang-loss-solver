@@ -149,6 +149,7 @@ end
     @test isapprox(probabilities["LW1"], 0.4018496420047733)
     @test isapprox(probabilities["LW2"], 0.11169370626989666)
 
+    accuracy = 3
     ErlangLossSolver.runUntilConvergence!(
         probabilities,
         customer_mu_array,
@@ -158,6 +159,7 @@ end
         storage_levels,
         max_num_iterations,
         T,
+        accuracy
     )
 
     @test isapprox(probabilities["LW1"], 0.4085067973262592)
@@ -210,6 +212,7 @@ end
     @test isapprox(probabilities["LW1"], 0.4018496420047733)
     @test isapprox(probabilities["LW2"], 0.11169370626989666)
 
+    accuracy = 3
     ErlangLossSolver.runUntilConvergence!(
         probabilities,
         customer_mu_array,
@@ -219,6 +222,7 @@ end
         storage_levels,
         max_num_iterations,
         T,
+        accuracy
     )
 
     @test isapprox(probabilities["LW1"], 0.40805809275815647, atol=1e-3)
@@ -296,6 +300,7 @@ end
     @test isapprox(probabilities["LW1"], 0.4018496420047733)
     @test isapprox(probabilities["LW2"], 0.11169370626989666)
 
+    accuracy = 3
     ErlangLossSolver.runUntilConvergence!(
         probabilities,
         customer_mu_array,
@@ -305,6 +310,7 @@ end
         storage_levels,
         max_num_iterations,
         T,
+        accuracy
     )
 
     @test isapprox(probabilities["LW1"], 0.40805809275815647, atol=1e-3)

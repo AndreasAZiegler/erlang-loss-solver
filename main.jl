@@ -13,7 +13,9 @@ function main()
     parsed_args = ErlangLossSolver.parseCommandline()
 
     input_file_name = parsed_args["input"]
-    ErlangLossSolverApplication.main(input_file_name)
+    accuracy = parsed_args["accuracy"]
+
+    ErlangLossSolverApplication.main(input_file_name, accuracy)
 end
 
 main()

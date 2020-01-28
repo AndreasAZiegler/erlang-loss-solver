@@ -20,6 +20,10 @@ function parseCommandline()::Dict{String,Any}
         "--input"
         help = "Select input file"
         arg_type = String
+        "--accuracy"
+        help = "Number of digits accuracy after the decimal point"
+        arg_type = Int64
+        default = 3
     end
 
     return parse_args(s)
@@ -338,6 +342,7 @@ end
 function haveWeConverged(
     new_probabilities::Dict{String,Float64},
     old_probabilities::Dict{String,Float64},
+    accuracy::Int,
 )::Bool
     new_values = [value for (key, value) in new_probabilities if occursin("LW", key)]
     old_values = [value for (key, value) in old_probabilities if occursin("LW", key)]
@@ -346,7 +351,7 @@ function haveWeConverged(
     println("old values: ", old_values)
 
     for (index, new_value) in enumerate(new_values)
-        if !isapprox(new_value, old_values[index], atol = 1e-3)
+        if !isapprox(new_value, old_values[index], atol = 10^(-Float64(accuracy)))
             println("new value and old value are not the same")
             return false
         end
@@ -364,6 +369,7 @@ function runUntilConvergence!(
     storage_levels::Dict{String,Int64},
     max_num_iterations::Float64,
     T::Float64,
+    accuracy::Int,
 )
 
     distance = max_num_iterations
@@ -384,7 +390,7 @@ function runUntilConvergence!(
             T,
         )
 
-        if haveWeConverged(probabilities, old_probabilities)
+        if haveWeConverged(probabilities, old_probabilities, accuracy)
             converged = true
         else
             iteration = iteration + 1
@@ -479,4 +485,3 @@ function calculateFillrates(
 end
 
 end
-
